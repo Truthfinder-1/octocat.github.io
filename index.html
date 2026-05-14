@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#020802">
+<title>MCPHONE</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #020802;
+  --panel: #0b1a0b;
+  --panel2: #0f200f;
+  --border: #1c341c;
+  --borderhi: #2a5a2a;
+  --green: #4ade80;
+  --greendim: #166534;
+  --greenmid: #22c55e;
+  --lime: #a3e635;
+  --text: #c8e6c8;
+  --muted: #4a6a4a;
+  --dim: #1e3a1e;
+  --red: #f87171;
+  --amber: #fbbf24;
+  --blue: #60a5fa;
+  --purple: #c084fc;
+  --font-mono: 'Share Tech Mono', 'Courier New', monospace;
+  --font-display: 'Orbitron', monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:var(--font-mono);color:var(--text);}
+
+/* Scanlines */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9999;}
+
+/* App shell */
+#app-shell{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;position:relative;}
+
+/* Status bar */
+#status-bar{background:#050d05;padding:8px 16px 6px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);flex-shrink:0;letter-spacing:1px;}
+#status-bar .stime{font-family:var(--font-display);font-size:11px;color:var(--green);}
+
+/* Screen */
+#screen{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
+#screen::-webkit-scrollbar{width:2px;}
+#screen::-webkit-scrollbar-thumb{background:var(--greendim);}
+
+/* Bottom nav */
+#bottom-nav{background:#050d05;border-top:1px solid var(--border);display:flex;padding:4px 6px 8px;gap:2px;flex-shrink:0;}
+.nav-btn{flex:1;background:transparent;border:none;border-radius:10px;color:var(--muted);font-size:8.5px;padding:7px 2px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--font-mono);letter-spacing:0.5px;transition:all 0.2s;}
+.nav-btn.active{background:var(--greendim);color:var(--green);border:1px solid var(--borderhi);}
+.nav-btn .nav-icon{font-size:17px;line-height:1;}
+
+/* Cards */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 14px;margin-bottom:10px;}
+.card-hi{border-color:var(--borderhi);box-shadow:0 0 20px rgba(74,222,128,0.08);}
+.card-title{font-family:var(--font-display);color:var(--muted);font-size:8.5px;letter-spacing:3px;margin-bottom:12px;text-transform:uppercase;}
+
+/* Inputs */
+.inp{width:100%;background:#030903;border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--lime);font-size:12px;font-family:var(--font-mono);outline:none;transition:border 0.2s;margin-bottom:10px;}
+.inp:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(74,222,128,0.1);}
+.inp::placeholder{color:var(--dim);}
+select.inp{cursor:pointer;}
+
+/* Buttons */
+.btn{border:none;border-radius:10px;font-family:var(--font-mono);cursor:pointer;transition:all 0.18s;font-size:12px;padding:11px 16px;font-weight:600;letter-spacing:1px;}
+.btn-primary{width:100%;background:linear-gradient(135deg,#15803d,var(--green));color:#020802;font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:2px;box-shadow:0 0 20px rgba(74,222,128,0.25);}
+.btn-primary:active{transform:scale(0.98);}
+.btn-secondary{background:var(--panel2);border:1px solid var(--borderhi);color:var(--green);}
+.btn-danger{background:#1a0808;border:1px solid #5a1a1a;color:var(--red);}
+.btn-amber{background:#1a1400;border:1px solid #5a4400;color:var(--amber);}
+.btn-sm{padding:6px 12px;font-size:10px;border-radius:7px;}
+.btn-full{width:100%;text-align:center;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* Chips/options */
+.options-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.chip{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--muted);font-size:11px;font-family:var(--font-mono);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.chip.active{background:rgba(74,222,128,0.15);border-color:var(--green);color:var(--green);}
+.chip.active-amber{background:rgba(251,191,36,0.12);border-color:var(--amber);color:var(--amber);}
+.chip.active-purple{background:rgba(192,132,252,0.12);border-color:var(--purple);color:var(--purple);}
+
+/* Console */
+.console-box{background:#020602;border:1px solid var(--border);border-radius:10px;padding:10px 12px;height:200px;overflow-y:auto;font-size:10px;line-height:1.7;scroll-behavior:smooth;}
+.console-box::-webkit-scrollbar{width:2px;}
+.console-box::-webkit-scrollbar-thumb{background:var(--greendim);}
+.cline{display:flex;gap:8px;align-items:flex-start;}
+.ctime{color:var(--dim);flex-shrink:0;font-size:9px;margin-top:1px;}
+.ctext{word-break:break-all;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
+.stat-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:9px 6px;text-align:center;}
+.stat-label{color:var(--muted);font-size:8px;letter-spacing:2px;margin-bottom:3px;}
+.stat-value{font-size:13px;font-weight:700;font-family:var(--font-display);}
+
+/* Progress */
+.prog-track{background:#020602;border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;transition:width 0.25s ease;box-shadow:0 0 8px rgba(74,222,128,0.5);}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:5000;padding:16px;}
+.modal-box{background:var(--panel);border:1px solid var(--greendim);border-radius:18px;padding:20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;}
+.modal-box::-webkit-scrollbar{width:2px;}
+.modal-title{font-family:var(--font-display);color:var(--green);font-size:13px;letter-spacing:2px;margin-bottom:16px;}
+
+/* Server item */
+.server-item{background:#0d1a0d;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;}
+.server-item.sel{border-color:var(--green);background:#0a1f0a;box-shadow:0 0 12px rgba(74,222,128,0.1);}
+.server-item:active{transform:scale(0.99);}
+
+/* Mod item */
+.mod-item{background:#0d1a0d;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+
+/* Player item */
+.player-item{background:#0d1a0d;border:1px solid var(--border);border-radius:9px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+
+/* User item */
+.user-item{background:#0d1a0d;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+
+/* Role badges */
+.rbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;font-family:var(--font-display);}
+.role-owner{background:#2e1f00;color:var(--amber);}
+.role-admin{background:#00142e;color:var(--blue);}
+.role-mod{background:#1e0030;color:var(--purple);}
+.role-user{background:#0a2010;color:var(--green);}
+
+/* Invite code display */
+.invite-code-box{background:#020a02;border:1px solid var(--greendim);border-radius:10px;padding:14px 16px;text-align:center;margin-bottom:10px;}
+.invite-code-text{font-family:var(--font-display);font-size:18px;color:var(--green);letter-spacing:4px;font-weight:700;}
+
+/* Connection badge */
+.conn-badge{padding:3px 8px;border-radius:20px;font-size:8px;font-weight:700;font-family:var(--font-display);}
+.conn-on{background:rgba(74,222,128,0.1);border:1px solid var(--green);color:var(--green);}
+.conn-off{background:rgba(248,113,113,0.1);border:1px solid var(--red);color:var(--red);}
+
+/* Warning / success boxes */
+.warn-box{background:#1a0800;border:1px solid #5a3000;border-radius:10px;padding:11px 14px;margin-bottom:10px;}
+.succ-box{background:#001a08;border:1px solid var(--greendim);border-radius:10px;padding:11px 14px;margin-bottom:10px;}
+.info-box{background:#00102a;border:1px solid #003070;border-radius:10px;padding:11px 14px;margin-bottom:10px;}
+
+/* Switch toggle */
+.toggle{position:relative;width:42px;height:22px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:#1a2a1a;border:1px solid var(--border);border-radius:99px;cursor:pointer;transition:all 0.2s;}
+.toggle input:checked ~ .toggle-track{background:var(--greendim);border-color:var(--green);}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:all 0.2s;}
+.toggle input:checked ~ .toggle-track .toggle-thumb{left:22px;background:var(--green);}
+
+/* Install step card */
+.install-step{border-radius:12px;padding:13px 14px;margin-bottom:8px;border:1px solid var(--border);background:var(--panel);transition:all 0.4s;}
+.install-step.active{border-color:var(--borderhi);box-shadow:0 0 18px rgba(74,222,128,0.1);}
+.install-step.done{border-color:var(--greendim);}
+
+/* Fab */
+.fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;background:linear-gradient(135deg,#15803d,var(--green));border:none;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(74,222,128,0.4);z-index:100;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.fab:active{transform:scale(0.92);}
+
+/* Drop zone */
+.drop-zone{border:2px dashed var(--border);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:10px;}
+.drop-zone.drag{border-color:var(--green);background:rgba(74,222,128,0.05);}
+
+/* Flex helpers */
+.flex{display:flex;gap:8px;}
+.flex-1{flex:1;}
+.col{flex-direction:column;}
+.ai-c{align-items:center;}
+.jc-sb{justify-content:space-between;}
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+.mt16{margin-top:16px;}
+.mb8{margin-bottom:8px;}
+.mb12{margin-bottom:12px;}
+.tc{text-align:center;}
+
+/* Animations */
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes glow{0%,100%{box-shadow:0 0 8px rgba(74,222,128,0.3);}50%{box-shadow:0 0 20px rgba(74,222,128,0.7);}}
+.pulse{animation:pulse 2s infinite;}
+.fadein{animation:fadeIn 0.3s ease;}
+.glowing{animation:glow 2s infinite;}
+
+/* Login screen */
+#login-wrap{padding:24px 16px;min-height:100%;display:flex;flex-direction:column;justify-content:center;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo .icon{font-size:52px;display:block;margin-bottom:8px;}
+.login-logo h1{font-family:var(--font-display);color:var(--green);font-size:22px;letter-spacing:6px;}
+.login-logo .sub{color:var(--muted);font-size:9px;letter-spacing:3px;margin-top:4px;}
+
+/* Screen padding */
+.sp{padding:12px 13px 80px;}
+
+/* Launcher selector */
+.launcher-row{display:flex;gap:6px;margin-bottom:12px;}
+.launcher-btn{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:8px 4px;color:var(--muted);font-size:9px;font-family:var(--font-mono);cursor:pointer;text-align:center;transition:all 0.2s;}
+.launcher-btn.active{background:var(--greendim);border-color:var(--green);color:var(--green);}
+
+/* Section title */
+.section-title{font-family:var(--font-display);font-size:9px;color:var(--muted);letter-spacing:3px;margin:16px 0 8px;text-transform:uppercase;}
+
+/* Divider */
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+
+/* Online dot */
+.dot-green{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px;}
+.dot-red{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:5px;}
+</style>
+</head>
+<body>
+<div id="app-shell">
+  <div id="status-bar">
+    <span class="stime" id="sb-time">00:00</span>
+    <span style="font-family:var(--font-display);font-size:9px;letter-spacing:3px;color:var(--green)">MCPHONE</span>
+    <span id="sb-right" style="display:flex;gap:6px;align-items:center;font-size:11px;">📶 🔋</span>
+  </div>
+  <div id="screen"></div>
+  <div id="bottom-nav" style="display:none;"></div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  // Auth
+  currentUser: null,
+  users: [],
+  // Navigation
+  tab: 'home',
+  // Server
+  servers: [],
+  currentServer: null,
+  serverRunning: false,
+  serverLogs: [],
+  onlinePlayers: [],
+  // Config
+  selectedVersion: '1.21.4',
+  selectedRam: '3 GB',
+  selectedType: 'paper',
+  selectedLauncher: 'java',
+  // Mods
+  mods: [],
+  // Install
+  phase: 'idle', // idle | installing | running
+  installSteps: [],
+  installStepIdx: 0,
+  installProgress: 0,
+  installDone: [],
+  installLogs: [],
+  // Backend
+  backendConnected: false,
+  playitAddress: null,
+  // UI state
+  modal: null,  // null | 'create' | 'join' | 'forgot' | 'reset' | 'adduser' | 'curseforge' | 'modrinth' | 'guide'
+  resetCode: null,
+  resetEmail: '',
+  newUserDraft: {username:'',password:'',email:'',role:'user'},
+  // Timers
+  _logInterval: null,
+  _statusInterval: null,
+  _installInterval: null,
+  _clockInterval: null,
+  _uptimeStart: null,
+};
+
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const VERSIONS = ['1.21.4','1.21.3','1.20.4','1.20.1','1.19.4','1.18.2','1.17.1','1.16.5','1.12.2','1.8.9'];
+const VERSION_TAGS = {'1.21.4':'LATEST','1.21.3':'STABLE','1.20.4':'POPULAR','1.20.1':'POPULAR','1.16.5':'CLASSIC','1.12.2':'CLASSIC','1.8.9':'LEGACY'};
+const RAM_OPTIONS = ['1 GB','2 GB','3 GB','4 GB','5 GB','6 GB'];
+const SERVER_TYPES = [
+  {id:'vanilla',label:'Vanilla',icon:'🌿',desc:'Official Mojang server'},
+  {id:'paper',  label:'Paper',  icon:'📄',desc:'High-performance fork'},
+  {id:'fabric', label:'Fabric', icon:'🪡',desc:'Lightweight mod loader'},
+  {id:'forge',  label:'Forge',  icon:'⚒️', desc:'Classic mod loader'},
+  {id:'spigot', label:'Spigot', icon:'🔧',desc:'Plugin support'},
+];
+const ROLES = {
+  owner:{name:'👑 Owner', color:'#fbbf24', cls:'role-owner', perms:['*']},
+  admin:{name:'⚙️ Admin',  color:'#60a5fa', cls:'role-admin', perms:['manage_mods','manage_users','stop_server','view_console','kick_players']},
+  mod:  {name:'🛡️ Mod',   color:'#c084fc', cls:'role-mod',   perms:['view_console','kick_players']},
+  user: {name:'👤 User',  color:'#6aaa6a', cls:'role-user',  perms:['view_console']},
+};
+const OWNER_EMAIL = 'hammamabusenan55@gmail.com';
+const CURSEFORGE_MODS = [
+  {id:'jei',           name:'Just Enough Items (JEI)', cat:'Utility',     dl:'25M', desc:'View recipes and items'},
+  {id:'journeymap',    name:'JourneyMap',               cat:'Map',         dl:'18M', desc:'Real-time minimap'},
+  {id:'the-aether',    name:'The Aether',               cat:'Dimension',   dl:'8M',  desc:'New sky dimension'},
+  {id:'twilight',      name:'Twilight Forest',          cat:'Dimension',   dl:'12M', desc:'Adventure dimension'},
+  {id:'create',        name:'Create',                   cat:'Tech',        dl:'10M', desc:'Mechanical engineering'},
+  {id:'optifine',      name:'OptiFine',                 cat:'Performance', dl:'30M', desc:'FPS boost and shaders'},
+  {id:'sodium',        name:'Sodium',                   cat:'Performance', dl:'15M', desc:'Rendering optimization'},
+  {id:'worldedit',     name:'WorldEdit',                cat:'Admin',       dl:'12M', desc:'In-game world editing'},
+  {id:'biomes-plenty', name:"Biomes O' Plenty",         cat:'World',       dl:'9M',  desc:'New biomes'},
+  {id:'tinkers',       name:"Tinkers' Construct",       cat:'Tech',        dl:'7M',  desc:'Tool crafting overhaul'},
+];
+const MODRINTH_MODS = [
+  {id:'fabric-api',    name:'Fabric API',        cat:'API',          dl:'25M', desc:'Core mod for Fabric'},
+  {id:'iris',          name:'Iris Shaders',      cat:'Graphics',     dl:'10M', desc:'Shader support'},
+  {id:'litematica',    name:'Litematica',        cat:'Building',     dl:'4M',  desc:'Schematic building'},
+  {id:'minihud',       name:'MiniHUD',           cat:'Utility',      dl:'2M',  desc:'Info display overlay'},
+  {id:'voice-chat',    name:'Simple Voice Chat', cat:'Social',       dl:'5M',  desc:'In-game voice chat'},
+  {id:'carpet',        name:'Carpet Mod',        cat:'Technical',    dl:'3M',  desc:'Technical MC features'},
+  {id:'lithium',       name:'Lithium',           cat:'Performance',  dl:'8M',  desc:'General optimizations'},
+  {id:'starlight',     name:'Starlight',         cat:'Performance',  dl:'6M',  desc:'Lighting engine rewrite'},
+  {id:'sodium-extra',  name:'Sodium Extra',      cat:'Performance',  dl:'4M',  desc:'Extra Sodium options'},
+  {id:'indium',        name:'Indium',            cat:'Compat',       dl:'2M',  desc:'Sodium/Fabric compat layer'},
+];
+
+const INSTALL_STEPS_DEF = (ver, type, mods) => {
+  const steps = [
+    {id:'java',   icon:'☕', label:'Java 21 Runtime',          size:'87 MB',
+      logs:['Detecting CPU: arm64-v8a','Fetching JRE 21 for Android...','Downloading jre-21-android-arm64.tar.gz (87 MB)','Verifying SHA-256 checksum... OK','Extracting to /data/mc-phone/java/','chmod +x java binary','java -version → OpenJDK 21.0.3','✓ Java runtime installed']},
+    {id:'server', icon:'⛏', label:`MC Server ${ver} (${type})`, size:'~180 MB',
+      logs:[`Fetching ${type} manifest for ${ver}...`,`Resolved download URL from API`,`Downloading server-${ver}-${type}.jar`,'Verifying file integrity... OK','Writing eula.txt (eula=true)','Writing server.properties',`Generating world seed...`,`✓ ${type.charAt(0).toUpperCase()+type.slice(1)} ${ver} ready`]},
+  ];
+  const enabledMods = mods.filter(m=>m.enabled);
+  if (enabledMods.length > 0) {
+    steps.push({id:'mods', icon:'🧩', label:`Installing ${enabledMods.length} Mod${enabledMods.length>1?'s':''}`, size:`${enabledMods.length} files`,
+      logs:[...enabledMods.flatMap(m=>[`Copying ${m.name} to /mods/...`,`Verifying ${m.name}... OK`]),'✓ All mods installed']});
+  }
+  steps.push({id:'playit', icon:'🌐', label:'playit.gg Tunnel Agent', size:'12 MB',
+    logs:['Fetching playit agent (linux-arm64)...','Downloading playit-linux-arm64 (12 MB)','Verifying signature... OK','Generating agent secret key...','Registering with playit.gg servers...','Negotiating TCP tunnel...','Waiting for address from playit.gg...','✓ Tunnel agent active (address shown in Server tab)']});
+  return steps;
+};
+
+// ═══════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════
+function load() {
+  try {
+    const u = localStorage.getItem('mcp_users');
+    S.users = u ? JSON.parse(u) : [
+      {id:'1',username:'Truth_finder',password:'hammam2009',email:OWNER_EMAIL,role:'owner',created:Date.now()},
+      {id:'2',username:'67',password:'67',email:'',role:'user',created:Date.now()},
+    ];
+    const sv = localStorage.getItem('mcp_servers');
+    S.servers = sv ? JSON.parse(sv) : [];
+    const mo = localStorage.getItem('mcp_mods');
+    S.mods = mo ? JSON.parse(mo) : [];
+    const cu = localStorage.getItem('mcp_current_user');
+    if (cu) S.currentUser = JSON.parse(cu);
+    const cs = localStorage.getItem('mcp_current_server');
+    if (cs) S.currentServer = JSON.parse(cs);
+  } catch(e) { console.error('Load error',e); }
+}
+function save() {
+  try {
+    localStorage.setItem('mcp_users', JSON.stringify(S.users));
+    localStorage.setItem('mcp_servers', JSON.stringify(S.servers));
+    localStorage.setItem('mcp_mods', JSON.stringify(S.mods));
+    if (S.currentUser) localStorage.setItem('mcp_current_user', JSON.stringify(S.currentUser));
+    if (S.currentServer) localStorage.setItem('mcp_current_server', JSON.stringify(S.currentServer));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function esc(t) { if(!t) return ''; return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function hasPerm(p) {
+  if (!S.currentUser) return false;
+  if (S.currentUser.role === 'owner') return true;
+  const r = ROLES[S.currentUser.role];
+  return r && (r.perms.includes('*') || r.perms.includes(p));
+}
+function genCode() { return Math.random().toString(36).substring(2,10).toUpperCase(); }
+function now() { const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; }
+function fmtUptime(s) { return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+function fakeAlert(msg) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#0a2a0a;border:1px solid var(--green);border-radius:12px;padding:12px 20px;z-index:9000;color:var(--green);font-size:11px;max-width:300px;text-align:center;font-family:var(--font-mono);animation:fadeIn 0.3s ease;box-shadow:0 0 20px rgba(74,222,128,0.3);`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// ═══════════════════════════════════════════
+// BACKEND
+// ═══════════════════════════════════════════
+async function checkBackend() {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 2000);
+    const r = await fetch('http://127.0.0.1:8080/api/status', {signal:ctrl.signal});
+    clearTimeout(tid);
+    S.backendConnected = r.ok;
+    if (r.ok && !S._logInterval) startPolling();
+  } catch { S.backendConnected = false; }
+  render();
+}
+async function apiCall(ep, data=null) {
+  if (!S.backendConnected) return {success:false,error:'Termux not running'};
+  try {
+    const opts = {method: data?'POST':'GET'};
+    if (data) { opts.headers={'Content-Type':'application/json'}; opts.body=JSON.stringify(data); }
+    const r = await fetch('http://127.0.0.1:8080'+ep, opts);
+    return await r.json();
+  } catch { S.backendConnected=false; return {success:false,error:'Connection lost'}; }
+}
+function startPolling() {
+  if (S._logInterval) clearInterval(S._logInterval);
+  S._logInterval = setInterval(async ()=>{
+    if (!S.backendConnected) return;
+    const r = await apiCall('/api/server-logs');
+    if (r?.logs) {
+      const existing = new Set(S.serverLogs.map(l=>l.text));
+      r.logs.forEach(l=>{ if(!existing.has(l)) S.serverLogs.push({t:now(),text:l}); });
+      renderConsoleSection();
+    }
+  }, 2000);
+  if (S._statusInterval) clearInterval(S._statusInterval);
+  S._statusInterval = setInterval(async ()=>{
+    if (!S.backendConnected) return;
+    const r = await apiCall('/api/status');
+    if (!r) return;
+    if (r.running !== undefined) S.serverRunning = r.running;
+    if (Array.isArray(r.players)) S.onlinePlayers = r.players;
+    if (r.playitAddress) S.playitAddress = r.playitAddress;
+    render();
+  }, 3000);
+}
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+function login() {
+  const u = document.getElementById('li-user')?.value.trim();
+  const p = document.getElementById('li-pass')?.value;
+  const found = S.users.find(x=>x.username===u && x.password===p);
+  if (!found) { fakeAlert('❌ Wrong username or password'); return; }
+  S.currentUser = found;
+  save();
+  checkBackend();
+  render();
+}
+function register() {
+  const u = document.getElementById('reg-user')?.value.trim();
+  const p = document.getElementById('reg-pass')?.value;
+  const e = document.getElementById('reg-email')?.value.trim();
+  if (!u || !p) { fakeAlert('❌ Username and password required'); return; }
+  if (S.users.find(x=>x.username===u)) { fakeAlert('❌ Username taken'); return; }
+  if (e && S.users.find(x=>x.email===e)) { fakeAlert('❌ Email already registered'); return; }
+  const nu = {id:Date.now().toString(),username:u,password:p,email:e||'',role:'user',created:Date.now()};
+  S.users.push(nu);
+  S.currentUser = nu;
+  save();
+  fakeAlert(`✅ Welcome, ${u}!`);
+  render();
+}
+function logout() {
+  S.currentUser = null;
+  S.currentServer = null;
+  S.serverRunning = false;
+  S.phase = 'idle';
+  S.tab = 'home';
+  localStorage.removeItem('mcp_current_user');
+  localStorage.removeItem('mcp_current_server');
+  clearInterval(S._logInterval);
+  clearInterval(S._statusInterval);
+  render();
+}
+function forgotPw() {
+  const e = document.getElementById('fp-email')?.value.trim();
+  if (!e) { fakeAlert('Enter your email'); return; }
+  const u = S.users.find(x=>x.email===e);
+  if (!u) { fakeAlert('No account with that email'); return; }
+  const code = Math.floor(100000+Math.random()*900000).toString();
+  S.resetCode = code;
+  S.resetEmail = e;
+  localStorage.setItem('mcp_rcode', code);
+  localStorage.setItem('mcp_remail', e);
+  localStorage.setItem('mcp_rtime', Date.now());
+  fakeAlert(`📧 Reset code: ${code}\n(In real app, sent to your email)`);
+  openModal('reset');
+}
+function doReset() {
+  const code = document.getElementById('rcode-in')?.value.trim();
+  const pw = document.getElementById('rpw-in')?.value;
+  if (!pw || pw.length < 3) { fakeAlert('Password too short'); return; }
+  const stored = localStorage.getItem('mcp_rcode');
+  const storedEmail = localStorage.getItem('mcp_remail');
+  const storedTime = parseInt(localStorage.getItem('mcp_rtime')||'0');
+  if (Date.now()-storedTime > 600000) { fakeAlert('Code expired'); closeModal(); return; }
+  if (code !== stored) { fakeAlert('Wrong code'); return; }
+  const u = S.users.find(x=>x.email===storedEmail);
+  if (u) { u.password = pw; save(); }
+  fakeAlert('✅ Password reset! Please log in.');
+  closeModal();
+}
+
+// ═══════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════
+function openModal(name) { S.modal=name; render(); }
+function closeModal() { S.modal=null; render(); }
+
+// ═══════════════════════════════════════════
+// USER MANAGEMENT
+// ═══════════════════════════════════════════
+function saveNewUser() {
+  const u = document.getElementById('nu-user')?.value.trim();
+  const p = document.getElementById('nu-pass')?.value;
+  const e = document.getElementById('nu-email')?.value.trim();
+  const r = document.getElementById('nu-role')?.value||'user';
+  if (!u||!p) { fakeAlert('Username and password required'); return; }
+  if (S.users.find(x=>x.username===u)) { fakeAlert('Username exists'); return; }
+  S.users.push({id:Date.now().toString(),username:u,password:p,email:e||'',role:r,created:Date.now()});
+  save(); closeModal(); fakeAlert(`✅ User ${u} added`);
+}
+function removeUser(id) {
+  if (S.currentUser?.id===id) { fakeAlert('Cannot remove yourself'); return; }
+  S.users = S.users.filter(u=>u.id!==id); save(); render();
+}
+function changeRole(id, role) {
+  const u = S.users.find(x=>x.id===id);
+  if (u) { u.role=role; save(); render(); }
+}
+
+// ═══════════════════════════════════════════
+// SERVER MANAGEMENT
+// ═══════════════════════════════════════════
+function createServer() {
+  const ver = S.selectedVersion;
+  const ram = S.selectedRam;
+  const name = `${S.currentUser.username}'s Server`;
+  const code = genCode();
+  const srv = {id:Date.now().toString(),name,version:ver,ram,type:S.selectedType,inviteCode:code,ownerId:S.currentUser.id,ownerName:S.currentUser.username,members:[S.currentUser.id],createdAt:Date.now()};
+  S.servers.push(srv);
+  S.currentServer = srv;
+  save(); closeModal();
+  fakeAlert(`✅ Server created!\n🔑 Code: ${code}`);
+  S.tab='home'; render();
+}
+function joinServer() {
+  const code = document.getElementById('join-code')?.value.trim().toUpperCase();
+  if (!code) return;
+  const srv = S.servers.find(s=>s.inviteCode===code);
+  if (!srv) { fakeAlert('❌ Invalid invite code'); return; }
+  if (srv.members.includes(S.currentUser.id)) { fakeAlert('Already a member'); return; }
+  srv.members.push(S.currentUser.id);
+  S.currentServer = srv;
+  save(); closeModal();
+  fakeAlert(`✅ Joined "${srv.name}"!`);
+}
+function selectServer(id) {
+  const srv = S.servers.find(s=>s.id===id);
+  if (srv) { S.currentServer=srv; save(); render(); }
+}
+function deleteServer(id) {
+  const srv = S.servers.find(s=>s.id===id);
+  if (!srv) return;
+  if (srv.ownerId!==S.currentUser.id && S.currentUser.role!=='owner') { fakeAlert('Only the owner can delete'); return; }
+  S.servers = S.servers.filter(s=>s.id!==id);
+  if (S.currentServer?.id===id) S.currentServer=null;
+  save(); render();
+}
+
+// ═══════════════════════════════════════════
+// MODS
+// ═══════════════════════════════════════════
+function addMod(source, name, cat, size) {
+  if (S.mods.find(m=>m.name===name)) { fakeAlert('Already added'); return; }
+  S.mods.push({id:Date.now().toString(),name,source,cat,size,enabled:true,added:new Date().toLocaleDateString()});
+  save(); fakeAlert(`✅ ${name} added`);
+}
+function addModFromCF(mod) { addMod('CurseForge',mod.name,mod.cat,'~5 MB'); closeModal(); render(); }
+function addModFromMR(mod) { addMod('Modrinth',mod.name,mod.cat,'~3 MB'); closeModal(); render(); }
+function toggleMod(id) {
+  const m = S.mods.find(x=>x.id===id);
+  if (m) { m.enabled=!m.enabled; save(); render(); }
+}
+function removeMod(id) {
+  S.mods = S.mods.filter(m=>m.id!==id); save(); render();
+}
+function handleModFile(files) {
+  Array.from(files).forEach(f=>{
+    if (!f.name.endsWith('.jar')) return;
+    const name = f.name.replace('.jar','');
+    const size = (f.size/1024/1024).toFixed(2)+' MB';
+    addMod('Local',name,'Custom',size);
+  });
+  render();
+}
+
+// ═══════════════════════════════════════════
+// SERVER CONTROL (install flow)
+// ═══════════════════════════════════════════
+function startInstall() {
+  if (!S.currentServer) { fakeAlert('Create or select a server first'); S.tab='servers'; render(); return; }
+  if (!S.backendConnected) {
+    fakeAlert('⚠️ Termux not connected. Install flow shown, but server needs Termux running node server.js to actually start.');
+  }
+  const steps = INSTALL_STEPS_DEF(S.currentServer.version, S.currentServer.type||'paper', S.mods);
+  S.installSteps = steps;
+  S.installStepIdx = 0;
+  S.installProgress = 0;
+  S.installDone = [];
+  S.installLogs = [];
+  S.phase = 'installing';
+  S.tab = 'home';
+  render();
+  runInstallStep(0, []);
+}
+function runInstallStep(idx, done) {
+  if (idx >= S.installSteps.length) {
+    S.phase = 'running';
+    S.serverRunning = true;
+    S.serverLogs = [];
+    S._uptimeStart = Date.now();
+    bootServer();
+    S.tab = 'console';
+    render(); return;
+  }
+  const step = S.installSteps[idx];
+  S.installStepIdx = idx;
+  S.installProgress = 0;
+  S.installLogs = [];
+  let prog = 0;
+  clearInterval(S._installInterval);
+  S._installInterval = setInterval(()=>{
+    prog = Math.min(prog+1.5, 100);
+    const li = Math.min(Math.floor((prog/100)*step.logs.length), step.logs.length);
+    S.installProgress = prog;
+    S.installLogs = step.logs.slice(0, li);
+    if (prog >= 100) {
+      clearInterval(S._installInterval);
+      const nd = [...done, step.id];
+      S.installDone = nd;
+      setTimeout(()=>runInstallStep(idx+1, nd), 500);
+    }
+    // Update just install section to avoid full re-render jank
+    renderInstallProgress();
+  }, 45);
+}
+function stopServer() {
+  if (S.backendConnected) {
+    apiCall('/api/stop').then(()=>{});
+  }
+  S.serverRunning = false;
+  S.phase = 'idle';
+  S.playitAddress = null;
+  S.onlinePlayers = [];
+  S.serverLogs.push({t:now(),text:'[MCPhone] Stop command sent to Termux.'});
+  clearInterval(S._logInterval);
+  clearInterval(S._statusInterval);
+  S._logInterval = null;
+  S._statusInterval = null;
+  render();
+}
+function bootServer() {
+  // No fake logs — real logs come from Termux via polling /api/server-logs
+  // Just show a waiting message until Termux connects
+  S.serverLogs = [];
+  if (!S.backendConnected) {
+    S.serverLogs.push({t:now(), text:'[MCPhone] Waiting for Termux backend on 127.0.0.1:8080...'});
+    S.serverLogs.push({t:now(), text:'[MCPhone] Open Termux and run: node server.js'});
+    S.serverLogs.push({t:now(), text:'[MCPhone] Once connected, real server logs will appear here.'});
+  } else {
+    // Tell Termux to actually start the server
+    apiCall('/api/start', {
+      version: S.currentServer.version,
+      type: S.currentServer.type || 'paper',
+      ram: S.currentServer.ram,
+      mods: S.mods.filter(m=>m.enabled).map(m=>m.name),
+    }).then(res => {
+      if (res.success) {
+        S.serverLogs.push({t:now(), text:'[MCPhone] Start command sent to Termux.'});
+      } else {
+        S.serverLogs.push({t:now(), text:`[MCPhone] Error: ${res.error}`});
+      }
+      renderConsoleSection();
+    });
+  }
+  S.onlinePlayers = []; // real players come from /api/status
+  renderConsoleSection();
+}
+function sendCommand() {
+  const inp = document.getElementById('cmd-inp');
+  if (!inp?.value.trim()) return;
+  const cmd = inp.value.trim(); inp.value='';
+  S.serverLogs.push({t:now(),text:`> ${cmd}`});
+  if (cmd.toLowerCase()==='/list') {
+    S.serverLogs.push({t:now(),text:`[Server] ${S.onlinePlayers.length} players: ${S.onlinePlayers.map(p=>p.name).join(', ')}`});
+  } else if (cmd.toLowerCase()==='/stop') {
+    stopServer(); return;
+  } else {
+    S.serverLogs.push({t:now(),text:`[Server] Unknown command. Use /help`});
+  }
+  renderConsoleSection();
+}
+function kickPlayer(name) {
+  if (!hasPerm('kick_players')) { fakeAlert('No permission'); return; }
+  S.onlinePlayers = S.onlinePlayers.filter(p=>p.name!==name);
+  S.serverLogs.push({t:now(),text:`[Server] Kicked ${name}`});
+  render();
+}
+
+// ═══════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════
+function startClock() {
+  clearInterval(S._clockInterval);
+  S._clockInterval = setInterval(()=>{
+    const d = new Date();
+    const el = document.getElementById('sb-time');
+    if (el) el.textContent = d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    // update uptime if server running
+    const ut = document.getElementById('uptime-val');
+    if (ut && S._uptimeStart) ut.textContent = fmtUptime(Math.floor((Date.now()-S._uptimeStart)/1000));
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════
+// PARTIAL RENDERS (avoid full re-render during install/console)
+// ═══════════════════════════════════════════
+function renderInstallProgress() {
+  const el = document.getElementById('install-wrap');
+  if (!el) { render(); return; }
+  const overall = Math.round(((S.installDone.length + S.installProgress/100)/S.installSteps.length)*100);
+  document.getElementById('install-overall-val').textContent = overall+'%';
+  document.getElementById('install-overall-bar').style.width = overall+'%';
+  S.installSteps.forEach((step,i)=>{
+    const isDone = S.installDone.includes(step.id);
+    const isActive = i===S.installStepIdx && !isDone;
+    const pbar = document.getElementById(`pbar-${step.id}`);
+    if (pbar) pbar.style.width = (isDone?100:isActive?S.installProgress:0)+'%';
+    const pval = document.getElementById(`pval-${step.id}`);
+    if (pval) pval.textContent = isActive?Math.round(S.installProgress)+'%':(isDone?'✓':'—');
+    const log = document.getElementById(`log-${step.id}`);
+    if (log && isActive) {
+      log.innerHTML = S.installLogs.map(l=>`<div style="color:${l.startsWith('✓')?'var(--green)':'var(--lime)'};padding-left:${l.startsWith('✓')?0:10}px;border-left:${l.startsWith('✓')?'none':'2px solid var(--dim)'};line-height:1.9;font-size:10px;">${l.startsWith('✓')?l:'> '+l}</div>`).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+  });
+}
+function renderConsoleSection() {
+  const box = document.getElementById('console-box');
+  if (!box) return;
+  box.innerHTML = S.serverLogs.slice(-50).map(l=>`<div class="cline"><span class="ctime">${l.t}</span><span class="ctext" style="color:${
+    l.text.includes('playit')?'var(--lime)':l.text.includes('Done')||l.text.includes('active')?'var(--green)':l.text.includes('[Mod]')?'var(--purple)':l.text.startsWith('>')?'var(--amber)':'#6aaa6a'}">${esc(l.text)}</span></div>`).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+// ═══════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════
+function render() {
+  const screen = document.getElementById('screen');
+  const nav = document.getElementById('bottom-nav');
+  if (!screen||!nav) return;
+
+  if (!S.currentUser) {
+    nav.style.display='none';
+    screen.innerHTML = renderLogin();
+    attachLoginEvents();
+    return;
+  }
+
+  nav.style.display='flex';
+  nav.innerHTML = renderNav();
+
+  let html = '';
+  if (S.phase==='installing') {
+    html = renderInstallScreen();
+  } else {
+    switch(S.tab) {
+      case 'home':    html = renderHome(); break;
+      case 'servers': html = renderServers(); break;
+      case 'mods':    html = renderMods(); break;
+      case 'console': html = renderConsole(); break;
+      case 'users':   html = renderUsers(); break;
+    }
+  }
+
+  const modalHtml = S.modal ? renderModal(S.modal) : '';
+  screen.innerHTML = `<div class="sp fadein">${html}</div>${modalHtml}`;
+  attachDynamicEvents();
+}
+
+// ═══════════════════════════════════════════
+// LOGIN SCREEN
+// ═══════════════════════════════════════════
+function renderLogin() {
+  return `
+  <div id="login-wrap">
+    <div class="login-logo">
+      <span class="icon">⛏</span>
+      <h1>MCPHONE</h1>
+      <div class="sub">MINECRAFT SERVER LAUNCHER</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔐 LOGIN</div>
+      <input id="li-user" class="inp" placeholder="Username" value="Truth_finder" autocomplete="username">
+      <input id="li-pass" class="inp" type="password" placeholder="Password" value="hammam2009" autocomplete="current-password">
+      <button class="btn btn-primary" onclick="login()">▶ LOGIN</button>
+      <div style="text-align:right;margin-top:8px;">
+        <button class="btn btn-sm" style="background:none;border:none;color:var(--muted);font-size:10px;font-family:var(--font-mono);cursor:pointer;" onclick="openModal('forgot')">🔑 Forgot password?</button>
+      </div>
+      <hr class="divider">
+      <div class="card-title">📝 REGISTER</div>
+      <input id="reg-user" class="inp" placeholder="Username" autocomplete="off">
+      <input id="reg-pass" class="inp" type="password" placeholder="Password" autocomplete="new-password">
+      <input id="reg-email" class="inp" type="email" placeholder="Email (for recovery)" autocomplete="email">
+      <button class="btn btn-secondary btn-full" onclick="register()">CREATE ACCOUNT</button>
+      <div class="tc mt8" style="font-size:9px;color:var(--dim);">Demo: Truth_finder / hammam2009 &nbsp;|&nbsp; 67 / 67</div>
+    </div>
+    ${S.modal?renderModal(S.modal):''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+function renderNav() {
+  const tabs = [
+    {id:'home',    icon:'🏠', label:'HOME'},
+    {id:'servers', icon:'🌐', label:'SERVERS'},
+    {id:'mods',    icon:'🧩', label:'MODS'},
+    {id:'console', icon: S.serverRunning?'◉':'⬛', label:'SERVER'},
+    {id:'users',   icon:'👥', label:'USERS'},
+  ];
+  return tabs.map(t=>`<button class="nav-btn ${S.tab===t.id&&S.phase!=='installing'?'active':''}" onclick="S.tab='${t.id}';S.phase='idle';render()">
+    <span class="nav-icon" style="${t.id==='console'&&S.serverRunning?'color:var(--green)':''}">${t.icon}</span>
+    <span>${t.label}</span>
+  </button>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// HOME SCREEN
+// ═══════════════════════════════════════════
+function renderHome() {
+  const r = ROLES[S.currentUser.role]||ROLES.user;
+  const connBadge = `<span class="conn-badge ${S.backendConnected?'conn-on':'conn-off'}">${S.backendConnected?'◉ TERMUX ON':'✕ TERMUX OFF'}</span>`;
+  const summary = S.currentServer ? `
+    <div class="card card-hi">
+      <div class="flex ai-c jc-sb mb8">
+        <div style="font-family:var(--font-display);color:var(--green);font-size:13px;">${esc(S.currentServer.name)}</div>
+        <div class="invite-code-text" style="font-size:13px;">${S.currentServer.inviteCode}</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-label">VERSION</div><div class="stat-value" style="color:var(--lime);font-size:12px;">${S.currentServer.version}</div></div>
+        <div class="stat-box"><div class="stat-label">RAM</div><div class="stat-value" style="color:var(--amber);font-size:12px;">${S.currentServer.ram}</div></div>
+        <div class="stat-box"><div class="stat-label">MODS</div><div class="stat-value" style="color:var(--purple);font-size:12px;">${S.mods.filter(m=>m.enabled).length}</div></div>
+      </div>
+      ${S.serverRunning
+        ? `<div class="flex"><button class="btn btn-danger btn-full" onclick="stopServer()">■ STOP SERVER</button></div>`
+        : `<button class="btn btn-primary" onclick="startInstall()">▶ INSTALL &amp; LAUNCH</button>`}
+    </div>` : `
+    <div class="card tc" style="padding:28px 16px;">
+      <div style="font-size:40px;margin-bottom:10px;">🌐</div>
+      <div style="color:var(--muted);font-size:12px;margin-bottom:16px;">No server selected</div>
+      <div class="flex" style="justify-content:center;gap:8px;">
+        <button class="btn btn-secondary" onclick="openModal('create')">➕ Create Server</button>
+        <button class="btn btn-secondary" onclick="openModal('join')">🔑 Join Server</button>
+      </div>
+    </div>`;
+
+  return `
+    <div class="flex ai-c jc-sb mb12">
+      <div>
+        <div style="font-family:var(--font-display);font-size:11px;color:var(--green);">${esc(S.currentUser.username)}</div>
+        <span class="rbadge ${r.cls}">${r.name}</span>
+      </div>
+      <div class="flex ai-c" style="gap:6px;">
+        ${connBadge}
+        <button class="btn btn-sm btn-danger" onclick="logout()">OUT</button>
+      </div>
+    </div>
+    ${summary}
+    <div class="succ-box" style="margin-bottom:10px;">
+      <div style="color:var(--green);font-size:10px;font-weight:700;margin-bottom:4px;">📱 HOW TO USE</div>
+      <div style="font-size:9px;color:var(--muted);line-height:1.8;">
+        1. Go to <b style="color:var(--text)">SERVERS</b> → create or join<br>
+        2. Add mods in <b style="color:var(--text)">MODS</b> tab<br>
+        3. Hit <b style="color:var(--green)">INSTALL &amp; LAUNCH</b><br>
+        4. App installs Java → Server → Mods → playit.gg<br>
+        5. Your real public IP appears in the SERVER tab once playit.gg connects
+      </div>
+    </div>
+    <div class="warn-box">
+      <div style="color:var(--amber);font-size:10px;font-weight:700;">⚠️ TERMUX BACKEND</div>
+      <div style="font-size:9px;color:#a08040;margin-top:4px;line-height:1.7;">Run <code style="color:var(--green);">node server.js</code> in Termux on port 8080 for real Java execution. The install flow is a visual simulation — actual server runs via Termux.</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// INSTALL SCREEN
+// ═══════════════════════════════════════════
+function renderInstallScreen() {
+  const overall = Math.round(((S.installDone.length + S.installProgress/100)/S.installSteps.length)*100);
+  const stepsHtml = S.installSteps.map((step,i)=>{
+    const isDone = S.installDone.includes(step.id);
+    const isActive = i===S.installStepIdx && !isDone;
+    const prog = isDone?100:isActive?S.installProgress:0;
+    return `<div class="install-step ${isDone?'done':isActive?'active':''}">
+      <div class="flex ai-c mb8">
+        <span style="font-size:20px;margin-right:10px;">${step.icon}</span>
+        <div style="flex:1;">
+          <div style="color:${isDone?'var(--green)':isActive?'var(--text)':'var(--muted)'};font-size:12px;font-weight:600;">${step.label}</div>
+          <div style="color:var(--dim);font-size:9px;margin-top:2px;">${step.size}</div>
+        </div>
+        <span id="pval-${step.id}" style="color:${isDone?'var(--green)':isActive?'var(--lime)':'var(--border)'};font-size:11px;font-weight:700;">${isDone?'✓':isActive?Math.round(prog)+'%':'—'}</span>
+      </div>
+      ${prog>0?`<div class="prog-track mb8" style="height:5px;"><div class="prog-fill" id="pbar-${step.id}" style="width:${prog}%;background:${isDone?'var(--greendim)':'linear-gradient(90deg,#15803d,var(--green))'}"></div></div>`:''}
+      ${isActive?`<div id="log-${step.id}" style="background:#020602;border-radius:7px;padding:8px 10px;max-height:100px;overflow-y:auto;">${S.installLogs.map(l=>`<div style="color:${l.startsWith('✓')?'var(--green)':'var(--lime)'};padding-left:${l.startsWith('✓')?0:10}px;border-left:${l.startsWith('✓')?'none':'2px solid var(--dim)'};line-height:1.9;font-size:10px;">${l.startsWith('✓')?l:'> '+l}</div>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  return `<div id="install-wrap">
+    <div class="tc" style="padding:8px 0 12px;">
+      <div style="font-family:var(--font-display);color:var(--green);font-size:14px;letter-spacing:4px;">INSTALLING</div>
+      <div style="color:var(--muted);font-size:10px;margin-top:3px;">Do not close the app</div>
+    </div>
+    <div class="card mb12">
+      <div class="flex ai-c jc-sb mb8">
+        <span class="card-title" style="margin-bottom:0;">OVERALL PROGRESS</span>
+        <span id="install-overall-val" style="font-family:var(--font-display);color:var(--green);font-size:13px;font-weight:700;">${overall}%</span>
+      </div>
+      <div class="prog-track" style="height:8px;"><div class="prog-fill" id="install-overall-bar" style="width:${overall}%;"></div></div>
+    </div>
+    ${stepsHtml}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// SERVERS SCREEN
+// ═══════════════════════════════════════════
+function renderServers() {
+  const mine = S.servers.filter(s=>s.ownerId===S.currentUser.id);
+  const joined = S.servers.filter(s=>s.members?.includes(S.currentUser.id)&&s.ownerId!==S.currentUser.id);
+
+  let html = `<div class="flex mb12" style="gap:8px;">
+    <button class="btn btn-secondary flex-1" onclick="openModal('join')">🔑 JOIN</button>
+    <button class="btn btn-primary flex-1" onclick="openModal('create')">➕ CREATE</button>
+  </div>`;
+
+  if (S.servers.length===0) {
+    html += `<div class="card tc" style="padding:32px 16px;">
+      <div style="font-size:44px;margin-bottom:10px;">🌐</div>
+      <div style="color:var(--muted);font-size:12px;">No servers yet. Create one!</div>
+    </div>`;
+  } else {
+    if (mine.length>0) {
+      html += `<div class="section-title">👑 Your Servers</div>`;
+      mine.forEach(s=>{
+        const sel = S.currentServer?.id===s.id;
+        html += `<div class="server-item ${sel?'sel':''}" onclick="selectServer('${s.id}')">
+          <div class="flex ai-c jc-sb">
+            <div>
+              <div style="color:var(--green);font-weight:700;font-size:13px;margin-bottom:3px;">${esc(s.name)}</div>
+              <div style="font-size:9px;color:var(--muted);">${s.version} • ${s.ram} • ${s.type||'paper'}</div>
+              <div style="font-size:9px;color:var(--amber);margin-top:2px;">🔑 ${s.inviteCode}</div>
+            </div>
+            <div class="flex ai-c" style="gap:6px;">
+              ${sel?'<span style="color:var(--green);font-size:14px;">✓</span>':''}
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteServer('${s.id}')">🗑</button>
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+    if (joined.length>0) {
+      html += `<div class="section-title" style="margin-top:16px;">🔗 Joined Servers</div>`;
+      joined.forEach(s=>{
+        const sel = S.currentServer?.id===s.id;
+        html += `<div class="server-item ${sel?'sel':''}" onclick="selectServer('${s.id}')">
+          <div style="color:var(--lime);font-weight:700;">${esc(s.name)}</div>
+          <div style="font-size:9px;color:var(--muted);">Owner: ${esc(s.ownerName)} • ${s.version}</div>
+        </div>`;
+      });
+    }
+  }
+  return html;
+}
+
+// ═══════════════════════════════════════════
+// MODS SCREEN
+// ═══════════════════════════════════════════
+function renderMods() {
+  const srv = S.currentServer;
+  const type = srv?.type||S.selectedType;
+  const needsLoader = type==='fabric'||type==='forge';
+  const warn = !needsLoader ? `<div class="warn-box"><div style="color:var(--amber);font-size:11px;font-weight:700;">⚠ Mods need Fabric or Forge</div><div style="font-size:9px;color:#a08040;margin-top:3px;">Switch server type in Servers tab.</div></div>` : '';
+  const enabledCount = S.mods.filter(m=>m.enabled).length;
+  const modsHtml = S.mods.length===0
+    ? `<div class="tc" style="padding:20px;color:var(--muted);font-size:11px;">No mods yet. Add some below!</div>`
+    : S.mods.map(m=>`
+      <div class="mod-item">
+        <span style="font-size:18px;flex-shrink:0;">🧩</span>
+        <div style="flex:1;min-width:0;">
+          <div style="color:${m.enabled?'var(--text)':'var(--muted)'};font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(m.name)}</div>
+          <div style="color:var(--dim);font-size:9px;">${m.source} • ${m.size}</div>
+        </div>
+        <label class="toggle" style="margin-left:6px;">
+          <input type="checkbox" ${m.enabled?'checked':''} onchange="toggleMod('${m.id}')">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+        </label>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px;" onclick="removeMod('${m.id}')">✕</button>
+      </div>`).join('');
+
+  return `
+    ${warn}
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('mod-file-inp').click()">
+      <div style="font-size:30px;margin-bottom:8px;">📂</div>
+      <div style="color:var(--muted);font-size:12px;font-weight:700;">TAP TO PICK MOD .JAR FILES</div>
+      <div style="color:var(--dim);font-size:10px;margin-top:4px;">Or drag and drop here</div>
+      <input id="mod-file-inp" type="file" accept=".jar" multiple style="display:none;" onchange="handleModFile(this.files)">
+    </div>
+    <div class="flex mb12" style="gap:8px;">
+      <button class="btn btn-secondary flex-1" onclick="openModal('curseforge')">🔥 CurseForge</button>
+      <button class="btn btn-secondary flex-1" onclick="openModal('modrinth')">📚 Modrinth</button>
+    </div>
+    <div class="card">
+      <div class="flex ai-c jc-sb mb12">
+        <span class="card-title" style="margin-bottom:0;">LOADED MODS (${enabledCount}/${S.mods.length})</span>
+        ${S.mods.length>0?`<button class="btn btn-danger btn-sm" onclick="S.mods=[];save();render()">CLEAR ALL</button>`:''}
+      </div>
+      ${modsHtml}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// CONSOLE SCREEN
+// ═══════════════════════════════════════════
+function renderConsole() {
+  if (!S.serverRunning) return `
+    <div class="tc" style="padding:48px 16px;">
+      <div style="font-size:44px;margin-bottom:12px;">⬛</div>
+      <div style="font-family:var(--font-display);color:var(--muted);font-size:13px;letter-spacing:2px;">SERVER OFFLINE</div>
+      <div style="color:var(--dim);font-size:10px;margin-top:8px;margin-bottom:24px;">Go to Home to launch</div>
+    </div>`;
+
+  const uptime = S._uptimeStart ? fmtUptime(Math.floor((Date.now()-S._uptimeStart)/1000)) : '00:00:00';
+  const consoleLogs = S.serverLogs.slice(-50).map(l=>`<div class="cline"><span class="ctime">${l.t}</span><span class="ctext" style="color:${l.text.includes('playit')?'var(--lime)':l.text.includes('Done')||l.text.includes('active')?'var(--green)':l.text.includes('[Mod]')?'var(--purple)':l.text.startsWith('>')?'var(--amber)':'#6aaa6a'}">${esc(l.text)}</span></div>`).join('');
+  const players = S.onlinePlayers.map(p=>`<div class="player-item">
+    <span><span style="color:var(--green);">⛏</span> ${esc(p.name)} <span style="color:var(--dim);font-size:9px;">${p.ping}ms</span></span>
+    ${hasPerm('kick_players')?`<button class="btn btn-danger btn-sm" onclick="kickPlayer('${esc(p.name)}')">Kick</button>`:''}
+  </div>`).join('');
+
+  const launcher = ['java','bedrock','pocket'].map(l=>`<div class="launcher-btn ${S.selectedLauncher===l?'active':''}" onclick="S.selectedLauncher='${l}';render()">${l==='java'?'☕ Java':l==='bedrock'?'📱 Bedrock':'🎮 Pocket'}</div>`).join('');
+
+  return `
+    <div class="succ-box glowing" style="text-align:center;margin-bottom:10px;">
+      <span class="dot-green pulse"></span>
+      <span style="font-family:var(--font-display);color:var(--green);font-size:11px;letter-spacing:2px;">SERVER ONLINE</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-label">PLAYERS</div><div class="stat-value" style="color:var(--lime);" id="player-count-val">${S.onlinePlayers.length}/20</div></div>
+      <div class="stat-box"><div class="stat-label">UPTIME</div><div class="stat-value" style="color:var(--green);font-size:11px;" id="uptime-val">${uptime}</div></div>
+      <div class="stat-box"><div class="stat-label">RAM</div><div class="stat-value" style="color:var(--amber);font-size:11px;">${S.currentServer?.ram||'?'}</div></div>
+    </div>
+    <div class="card card-hi mb12">
+      <div class="card-title">🌐 PUBLIC ADDRESS (playit.gg)</div>
+      ${S.playitAddress
+        ? `<div class="flex ai-c jc-sb">
+             <span style="font-family:var(--font-display);color:var(--green);font-size:13px;">${S.playitAddress}</span>
+             <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard?.writeText('${S.playitAddress}');fakeAlert('📋 Copied!')">COPY</button>
+           </div>`
+        : `<div style="color:var(--muted);font-size:11px;">
+             ${S.backendConnected ? '⏳ Waiting for playit.gg tunnel...' : '❌ Termux not connected — run node server.js'}
+           </div>`
+      }
+    </div>
+    <div class="launcher-row">${launcher}</div>
+    <div class="console-box mb10" id="console-box">${consoleLogs}</div>
+    ${S.currentServer?.ownerId===S.currentUser?.id?`
+      <div class="flex mb12">
+        <input id="cmd-inp" class="inp flex-1" style="margin-bottom:0;" placeholder="Server command... (/help, /list)" onkeydown="if(event.key==='Enter')sendCommand()">
+        <button class="btn btn-secondary" style="flex-shrink:0;" onclick="sendCommand()">↵</button>
+      </div>`:``}
+    <div class="card mb12">
+      <div class="card-title">👥 PLAYERS (${S.onlinePlayers.length}/20)</div>
+      ${players||`<div class="tc" style="padding:12px;color:var(--muted);font-size:11px;">No players online</div>`}
+    </div>
+    <button class="btn btn-danger btn-full" onclick="stopServer()" style="margin-bottom:10px;">■ STOP SERVER</button>`;
+}
+
+// ═══════════════════════════════════════════
+// USERS SCREEN
+// ═══════════════════════════════════════════
+function renderUsers() {
+  const usersHtml = S.users.map(u=>{
+    const r = ROLES[u.role]||ROLES.user;
+    const isSelf = u.id===S.currentUser.id;
+    return `<div class="user-item">
+      <div style="flex:1;min-width:0;">
+        <div class="flex ai-c" style="gap:6px;margin-bottom:3px;">
+          <span style="color:var(--green);font-weight:700;font-size:12px;">${esc(u.username)}</span>
+          <span class="rbadge ${r.cls}">${r.name}</span>
+          ${isSelf?'<span style="font-size:8px;color:var(--muted);">(you)</span>':''}
+        </div>
+        <div style="font-size:9px;color:var(--muted);">${u.email||'No email'}</div>
+      </div>
+      ${hasPerm('manage_users')&&!isSelf?`
+        <div class="flex ai-c" style="gap:6px;">
+          <select class="inp" style="margin-bottom:0;padding:5px 8px;font-size:10px;width:80px;" onchange="changeRole('${u.id}',this.value)">
+            <option value="user" ${u.role==='user'?'selected':''}>User</option>
+            <option value="mod" ${u.role==='mod'?'selected':''}>Mod</option>
+            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+            ${S.currentUser.role==='owner'?`<option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>`:''}
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="removeUser('${u.id}')">✕</button>
+        </div>`:``}
+    </div>`;
+  }).join('');
+
+  return `
+    ${hasPerm('manage_users')?`<button class="btn btn-primary mb12" onclick="openModal('adduser')">+ ADD USER</button>`:''}
+    <div class="card">
+      <div class="card-title">👥 ALL USERS (${S.users.length})</div>
+      ${usersHtml}
+    </div>
+    <div class="info-box">
+      <div style="color:var(--blue);font-size:10px;font-weight:700;margin-bottom:6px;">Role Permissions</div>
+      <div style="font-size:9px;line-height:1.9;color:var(--muted);">
+        👑 Owner — Full access<br>
+        ⚙️ Admin — Mods, users, server control<br>
+        🛡️ Mod — Console, kick players<br>
+        👤 User — View console only
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════
+function renderModal(name) {
+  let inner = '';
+  if (name==='create') inner = renderCreateModal();
+  else if (name==='join') inner = renderJoinModal();
+  else if (name==='forgot') inner = renderForgotModal();
+  else if (name==='reset') inner = renderResetModal();
+  else if (name==='adduser') inner = renderAddUserModal();
+  else if (name==='curseforge') inner = renderCFModal();
+  else if (name==='modrinth') inner = renderMRModal();
+  else return '';
+  return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">${inner}</div>`;
+}
+
+function renderCreateModal() {
+  const vOpts = VERSIONS.map(v=>{
+    const tag = VERSION_TAGS[v]||'';
+    return `<div class="chip ${S.selectedVersion===v?'active':''}" onclick="S.selectedVersion='${v}';render()">${v}${tag?` <span style="font-size:8px;opacity:0.7;">${tag}</span>`:''}</div>`;
+  }).join('');
+  const rOpts = RAM_OPTIONS.map(r=>`<div class="chip active-amber ${S.selectedRam===r?'active-amber':''}  ${S.selectedRam===r?'active':''}" onclick="S.selectedRam='${r}';render()">${r}</div>`).join('');
+  const tOpts = SERVER_TYPES.map(t=>`<div class="chip ${S.selectedType===t.id?'active':''}" onclick="S.selectedType='${t.id}';render()">${t.icon} ${t.label}</div>`).join('');
+  return `<div class="modal-box">
+    <div class="modal-title">➕ CREATE SERVER</div>
+    <div class="warn-box"><div style="color:var(--amber);font-size:10px;">⚠ Version locked after creation!</div></div>
+    <div style="background:#020a02;border-radius:9px;padding:10px;margin-bottom:12px;color:var(--muted);font-size:11px;">
+      📝 Name: <strong style="color:var(--green);">${esc(S.currentUser?.username)}'s Server</strong>
+    </div>
+    <div class="card-title">🎮 Minecraft Version</div>
+    <div class="options-row">${vOpts}</div>
+    <div class="card-title">⚒️ Server Type</div>
+    <div class="options-row">${tOpts}</div>
+    <div class="card-title">💾 RAM Allocation</div>
+    <div class="options-row">${rOpts}</div>
+    <div class="flex mt12">
+      <button class="btn btn-primary flex-1" onclick="createServer()">CREATE</button>
+      <button class="btn btn-secondary" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>`;
+}
+function renderJoinModal() {
+  return `<div class="modal-box">
+    <div class="modal-title">🔑 JOIN SERVER</div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:12px;">Enter the 8-character invite code from the server owner.</div>
+    <input id="join-code" class="inp" placeholder="e.g. A1B2C3D4" style="text-transform:uppercase;letter-spacing:3px;font-size:16px;text-align:center;" maxlength="8">
+    <div class="flex mt12">
+      <button class="btn btn-primary flex-1" onclick="joinServer()">JOIN</button>
+      <button class="btn btn-secondary" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>`;
+}
+function renderForgotModal() {
+  return `<div class="modal-box">
+    <div class="modal-title">🔑 RESET PASSWORD</div>
+    <input id="fp-email" class="inp" type="email" placeholder="Your email address">
+    <div class="flex mt12">
+      <button class="btn btn-primary flex-1" onclick="forgotPw()">SEND CODE</button>
+      <button class="btn btn-secondary" onclick="closeModal()">CANCEL</button>
+    </div>
+    <div class="tc mt8" style="font-size:9px;color:var(--muted);">A 6-digit code will be sent to your email</div>
+  </div>`;
+}
+function renderResetModal() {
+  return `<div class="modal-box">
+    <div class="modal-title">🔐 VERIFY &amp; RESET</div>
+    <input id="rcode-in" class="inp" placeholder="6-digit code" maxlength="6" style="letter-spacing:4px;text-align:center;font-size:18px;">
+    <input id="rpw-in" class="inp" type="password" placeholder="New password">
+    <div class="flex mt12">
+      <button class="btn btn-primary flex-1" onclick="doReset()">RESET</button>
+      <button class="btn btn-secondary" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>`;
+}
+function renderAddUserModal() {
+  return `<div class="modal-box">
+    <div class="modal-title">➕ ADD USER</div>
+    <input id="nu-user" class="inp" placeholder="Username" autocomplete="off">
+    <input id="nu-pass" class="inp" type="password" placeholder="Password">
+    <input id="nu-email" class="inp" type="email" placeholder="Email (optional)">
+    <select id="nu-role" class="inp">
+      <option value="user">👤 User</option>
+      <option value="mod">🛡️ Mod</option>
+      <option value="admin">⚙️ Admin</option>
+    </select>
+    <div class="flex mt12">
+      <button class="btn btn-primary flex-1" onclick="saveNewUser()">ADD USER</button>
+      <button class="btn btn-secondary" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>`;
+}
+function renderCFModal() {
+  return `<div class="modal-box">
+    <div class="modal-title">🔥 CURSEFORGE MODS</div>
+    <div style="max-height:50vh;overflow-y:auto;">
+      ${CURSEFORGE_MODS.map(m=>`<div class="mod-item" style="cursor:pointer;" onclick="addModFromCF(${JSON.stringify(m).replace(/"/g,'&quot;')})">
+        <div style="flex:1;">
+          <div style="color:var(--green);font-weight:700;font-size:12px;">${m.name}</div>
+          <div style="font-size:9px;color:var(--muted);">${m.cat} • ${m.dl} downloads</div>
+          <div style="font-size:9px;color:var(--dim);">${m.desc}</div>
+        </div>
+        <span style="font-size:20px;flex-shrink:0;">➕</span>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-secondary btn-full mt12" onclick="closeModal()">CLOSE</button>
+  </div>`;
+}
+function renderMRModal() {
+  return `<div class="modal-box">
+    <div class="modal-title">📚 MODRINTH MODS</div>
+    <div style="max-height:50vh;overflow-y:auto;">
+      ${MODRINTH_MODS.map(m=>`<div class="mod-item" style="cursor:pointer;" onclick="addModFromMR(${JSON.stringify(m).replace(/"/g,'&quot;')})">
+        <div style="flex:1;">
+          <div style="color:var(--lime);font-weight:700;font-size:12px;">${m.name}</div>
+          <div style="font-size:9px;color:var(--muted);">${m.cat} • ${m.dl} downloads</div>
+          <div style="font-size:9px;color:var(--dim);">${m.desc}</div>
+        </div>
+        <span style="font-size:20px;flex-shrink:0;">➕</span>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-secondary btn-full mt12" onclick="closeModal()">CLOSE</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// EVENT ATTACHMENT
+// ═══════════════════════════════════════════
+function attachLoginEvents() {
+  // Enter key support
+  const li = document.getElementById('li-pass');
+  if (li) li.addEventListener('keydown', e=>{ if(e.key==='Enter') login(); });
+}
+function attachDynamicEvents() {
+  // Drag and drop for mod zone
+  const dz = document.getElementById('drop-zone');
+  if (dz) {
+    dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+    dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); handleModFile(e.dataTransfer.files); });
+  }
+  // Console auto-scroll
+  const cb = document.getElementById('console-box');
+  if (cb) cb.scrollTop = cb.scrollHeight;
+}
+
+// ═══════════════════════════════════════════
+// GLOBAL EXPOSURE (for onclick in HTML strings)
+// ═══════════════════════════════════════════
+const G = {
+  login, register, logout, forgotPw, doReset,
+  openModal, closeModal,
+  createServer, joinServer, selectServer, deleteServer,
+  addModFromCF, addModFromMR, toggleMod, removeMod, handleModFile,
+  saveNewUser, removeUser, changeRole,
+  startInstall, stopServer, sendCommand, kickPlayer,
+  fakeAlert, save,
+};
+Object.assign(window, G);
+window.S = S;
+
+// ═══════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════
+load();
+startClock();
+render();
+setInterval(checkBackend, 15000);
+// Initial clock tick
+(()=>{ const d=new Date(); const el=document.getElementById('sb-time'); if(el) el.textContent=d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}); })();
+</script>
+</body>
+</html>
