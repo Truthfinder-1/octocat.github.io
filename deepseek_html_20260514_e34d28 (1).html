@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>MCPHONE - LOCAL NETWORK</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#020802;font-family:'Share Tech Mono',monospace;color:#c8e6c8;height:100vh;overflow:hidden;}
+:root{--bg:#020802;--panel:#0b1a0b;--border:#1c341c;--green:#4ade80;--greendim:#166534;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--purple:#c084fc;}
+#app{display:flex;flex-direction:column;height:100vh;max-width:500px;margin:0 auto;}
+#status-bar{background:#050d05;padding:8px 16px;display:flex;justify-content:space-between;font-size:10px;border-bottom:1px solid var(--border);}
+#screen{flex:1;overflow-y:auto;padding:12px;}
+#bottom-nav{background:#050d05;border-top:1px solid var(--border);display:flex;padding:5px;gap:4px;}
+.nav-btn{flex:1;background:transparent;border:none;color:#4a6a4a;padding:8px 4px;cursor:pointer;font-family:monospace;border-radius:8px;}
+.nav-btn.active{background:#166534;color:#4ade80;}
+.card{background:#0b1a0b;border:1px solid #1c341c;border-radius:14px;padding:14px;margin-bottom:10px;}
+.inp{width:100%;background:#030903;border:1px solid #1c341c;border-radius:10px;padding:10px;color:#a3e635;font-family:monospace;}
+.btn{background:#0f200f;border:1px solid #2a5a2a;border-radius:10px;padding:10px 16px;color:#4ade80;cursor:pointer;font-family:monospace;font-weight:bold;}
+.btn-primary{background:linear-gradient(135deg,#15803d,#4ade80);color:#020802;}
+.btn-danger{background:#1a0808;border-color:#5a1a1a;color:#f87171;}
+.console-box{background:#020602;border:1px solid #1c341c;border-radius:10px;padding:10px;height:200px;overflow-y:auto;font-size:10px;font-family:monospace;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.modal-box{background:#0b1a0b;border:1px solid #4ade80;border-radius:18px;padding:20px;width:90%;max-width:340px;}
+.conn-badge{padding:3px 8px;border-radius:20px;font-size:9px;}
+.conn-on{background:rgba(74,222,128,0.1);border:1px solid #4ade80;color:#4ade80;}
+.conn-off{background:rgba(248,113,113,0.1);border:1px solid #f87171;color:#f87171;}
+.flex{display:flex;gap:8px;}
+.flex-1{flex:1;}
+.mt8{margin-top:8px;}
+.mb8{margin-bottom:8px;}
+.tc{text-align:center;}
+.server-item{background:#0d1a0d;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;}
+.server-item.sel{border-color:#4ade80;background:#0a1f0a;}
+.mod-item{background:#0d1a0d;border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+.user-item{background:#0d1a0d;border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+.rbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;}
+.role-owner{background:#2e1f00;color:#fbbf24;}
+.role-admin{background:#00142e;color:#60a5fa;}
+.role-mod{background:#1e0030;color:#c084fc;}
+.role-user{background:#0a2010;color:#4ade80;}
+.options-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.chip{background:#0f200f;border:1px solid #1c341c;border-radius:8px;padding:7px 10px;font-size:11px;cursor:pointer;}
+.chip.active{background:rgba(74,222,128,0.15);border-color:#4ade80;color:#4ade80;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
+.stat-box{background:#0f200f;border:1px solid #1c341c;border-radius:10px;padding:9px;text-align:center;}
+.stat-label{color:#4a6a4a;font-size:8px;margin-bottom:3px;}
+.stat-value{font-size:13px;font-weight:700;}
+.player-item{background:#0d1a0d;border:1px solid #1c341c;border-radius:9px;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;}
+.cline{display:flex;gap:8px;margin-bottom:4px;}
+.ctime{color:#4a6a4a;font-size:9px;}
+.invite-code-text{font-family:Orbitron;font-size:13px;color:#4ade80;}
+.succ-box{background:#001a08;border:1px solid #166534;border-radius:10px;padding:11px 14px;margin-bottom:10px;}
+.warn-box{background:#1a0800;border:1px solid #5a3000;border-radius:10px;padding:11px 14px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="status-bar">
+    <span id="clock">--:--</span>
+    <span style="color:#4ade80;font-family:Orbitron;">MCPHONE</span>
+    <span id="backend-status">🔌</span>
+  </div>
+  <div id="screen"></div>
+  <div id="bottom-nav"></div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// LOCAL NETWORK CONFIGURATION - CHANGE THIS TO YOUR SERVER'S IP!
+// ============================================================
+// OPTION 1: Auto-detect (works if backend is on same device)
+const BACKEND_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') 
+  ? 'http://localhost:8080'
+  : 'http://' + window.location.hostname.split(':')[0] + ':8080';
+
+// OPTION 2: MANUAL - Uncomment and put your server's local IP here:
+// const BACKEND_URL = "http://192.168.1.100:8080";  // CHANGE THIS to your server's IP!
+
+// OPTION 3: Or use this to manually enter IP
+// let customIP = prompt("Enter your backend IP (e.g., 192.168.1.100):", "localhost");
+// const BACKEND_URL = `http://${customIP}:8080`;
+
+// The Minecraft server address (same as your backend IP but port 25565)
+let MINECRAFT_ADDRESS = BACKEND_URL.replace('http://', '').replace(':8080', '') + ':25565';
+// ============================================================
+
+console.log(`🎮 Backend URL: ${BACKEND_URL}`);
+console.log(`🎮 Minecraft Address: ${MINECRAFT_ADDRESS}`);
+
+// State
+let currentUser = null;
+let users = [];
+let servers = [];
+let currentServer = null;
+let serverRunning = false;
+let serverLogs = [];
+let onlinePlayers = [];
+let selectedVersion = '1.21.4';
+let selectedRam = '3 GB';
+let selectedType = 'paper';
+let mods = [];
+let backendConnected = false;
+let currentTab = 'home';
+let modal = null;
+let _logInterval = null;
+let _statusInterval = null;
+let _uptimeStart = null;
+
+// Data
+const VERSIONS = ['1.21.4','1.21.3','1.20.4','1.20.1','1.19.4','1.18.2'];
+const RAM_OPTIONS = ['1 GB','2 GB','3 GB','4 GB','5 GB','6 GB'];
+const SERVER_TYPES = [
+  {id:'vanilla',label:'Vanilla',icon:'🌿'},
+  {id:'paper',label:'Paper',icon:'📄'},
+  {id:'fabric',label:'Fabric',icon:'🪡'},
+  {id:'forge',label:'Forge',icon:'⚒️'},
+];
+const ROLES = {
+  owner:{name:'👑 Owner', cls:'role-owner'},
+  admin:{name:'⚙️ Admin', cls:'role-admin'},
+  mod:{name:'🛡️ Mod', cls:'role-mod'},
+  user:{name:'👤 User', cls:'role-user'},
+};
+
+const CURSEFORGE_MODS = [
+  {id:'jei',name:'Just Enough Items',cat:'Utility',dl:'25M',desc:'View recipes'},
+  {id:'journeymap',name:'JourneyMap',cat:'Map',dl:'18M',desc:'Real-time minimap'},
+  {id:'create',name:'Create',cat:'Tech',dl:'10M',desc:'Mechanical engineering'},
+];
+const MODRINTH_MODS = [
+  {id:'fabric-api',name:'Fabric API',cat:'API',dl:'25M',desc:'Core mod'},
+  {id:'iris',name:'Iris Shaders',cat:'Graphics',dl:'10M',desc:'Shader support'},
+  {id:'voice-chat',name:'Simple Voice Chat',cat:'Social',dl:'5M',desc:'Voice chat'},
+];
+
+// Load/Save
+function load() {
+  try {
+    users = JSON.parse(localStorage.getItem('mcp_users') || JSON.stringify([
+      {id:'1',username:'Truth_finder',password:'hammam2009',email:'owner@example.com',role:'owner'},
+      {id:'2',username:'67',password:'67',role:'user'},
+    ]));
+    servers = JSON.parse(localStorage.getItem('mcp_servers') || '[]');
+    mods = JSON.parse(localStorage.getItem('mcp_mods') || '[]');
+    currentUser = JSON.parse(localStorage.getItem('mcp_current_user') || 'null');
+    currentServer = JSON.parse(localStorage.getItem('mcp_current_server') || 'null');
+  } catch(e) {}
+}
+function save() {
+  localStorage.setItem('mcp_users', JSON.stringify(users));
+  localStorage.setItem('mcp_servers', JSON.stringify(servers));
+  localStorage.setItem('mcp_mods', JSON.stringify(mods));
+  if (currentUser) localStorage.setItem('mcp_current_user', JSON.stringify(currentUser));
+  if (currentServer) localStorage.setItem('mcp_current_server', JSON.stringify(currentServer));
+}
+
+// Helpers
+function esc(t) { return String(t||'').replace(/[&<>]/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+function genCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
+function now() { return new Date().toLocaleTimeString(); }
+function fakeAlert(msg) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#0a2a0a;border:1px solid #4ade80;border-radius:12px;padding:12px 20px;z-index:9000;color:#4ade80;font-size:11px;max-width:300px;text-align:center;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// Backend API
+async function checkBackend() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/health`, { signal: AbortSignal.timeout(3000) });
+    backendConnected = res.ok;
+    if (backendConnected) {
+      const data = await res.json();
+      serverRunning = data.running;
+      MINECRAFT_ADDRESS = data.address || MINECRAFT_ADDRESS;
+      if (!_logInterval) startPolling();
+    }
+  } catch(e) { backendConnected = false; serverRunning = false; }
+  updateBackendIndicator();
+  render();
+}
+
+async function apiCall(ep, data=null) {
+  if (!backendConnected) return {success:false, error:'Backend not connected'};
+  try {
+    const opts = {method: data ? 'POST' : 'GET'};
+    if (data) { opts.headers={'Content-Type':'application/json'}; opts.body=JSON.stringify(data); }
+    const res = await fetch(BACKEND_URL + ep, opts);
+    return await res.json();
+  } catch(e) { return {success:false, error:e.message}; }
+}
+
+function startPolling() {
+  if (_logInterval) clearInterval(_logInterval);
+  _logInterval = setInterval(async () => {
+    if (!backendConnected) return;
+    const r = await apiCall('/api/server-logs');
+    if (r?.logs) serverLogs = r.logs.map(l => ({t:now(), text:l}));
+    const consoleBox = document.getElementById('console-box');
+    if (consoleBox) renderConsoleSection();
+  }, 2000);
+  if (_statusInterval) clearInterval(_statusInterval);
+  _statusInterval = setInterval(async () => {
+    if (!backendConnected) return;
+    const r = await apiCall('/api/status');
+    if (r) {
+      serverRunning = r.running;
+      onlinePlayers = r.players || [];
+    }
+    render();
+  }, 3000);
+}
+
+function updateBackendIndicator() {
+  const el = document.getElementById('backend-status');
+  if (el) el.innerHTML = backendConnected ? '🟢' : '🔴';
+}
+
+// Auth
+function login() {
+  const u = document.getElementById('login-user')?.value;
+  const p = document.getElementById('login-pass')?.value;
+  const found = users.find(x => x.username === u && x.password === p);
+  if (!found) { fakeAlert('❌ Wrong credentials'); return; }
+  currentUser = found;
+  save();
+  checkBackend();
+  render();
+}
+function logout() {
+  currentUser = null;
+  currentServer = null;
+  serverRunning = false;
+  if (_logInterval) clearInterval(_logInterval);
+  if (_statusInterval) clearInterval(_statusInterval);
+  save();
+  render();
+}
+
+// Server functions
+function createServer() {
+  const srv = {
+    id: Date.now().toString(),
+    name: `${currentUser.username}'s Server`,
+    version: selectedVersion,
+    ram: selectedRam,
+    type: selectedType,
+    inviteCode: genCode(),
+    ownerId: currentUser.id,
+    ownerName: currentUser.username,
+    members: [currentUser.id]
+  };
+  servers.push(srv);
+  currentServer = srv;
+  save();
+  closeModal();
+  fakeAlert(`✅ Server created!\n🔑 Code: ${srv.inviteCode}\n🎮 Connect: ${MINECRAFT_ADDRESS}`);
+  render();
+}
+function joinServer() {
+  const code = document.getElementById('join-code')?.value?.toUpperCase();
+  const srv = servers.find(s => s.inviteCode === code);
+  if (!srv) { fakeAlert('❌ Invalid code'); return; }
+  if (!srv.members.includes(currentUser.id)) srv.members.push(currentUser.id);
+  currentServer = srv;
+  save();
+  closeModal();
+  fakeAlert(`✅ Joined ${srv.name}!\n🎮 Connect: ${MINECRAFT_ADDRESS}`);
+  render();
+}
+function selectServer(id) {
+  currentServer = servers.find(s => s.id === id);
+  save();
+  render();
+}
+function deleteServer(id) {
+  servers = servers.filter(s => s.id !== id);
+  if (currentServer?.id === id) currentServer = null;
+  save();
+  render();
+}
+
+// Mod functions
+function addMod(source, name, cat) {
+  if (mods.find(m => m.name === name)) { fakeAlert('Already added'); return; }
+  mods.push({id: Date.now().toString(), name, source, cat, enabled: true});
+  save();
+  fakeAlert(`✅ ${name} added`);
+}
+function addModFromCF(mod) { addMod('CurseForge', mod.name, mod.cat); closeModal(); render(); }
+function addModFromMR(mod) { addMod('Modrinth', mod.name, mod.cat); closeModal(); render(); }
+function toggleMod(id) {
+  const m = mods.find(x => x.id === id);
+  if (m) m.enabled = !m.enabled;
+  save();
+  render();
+}
+function removeMod(id) {
+  mods = mods.filter(m => m.id !== id);
+  save();
+  render();
+}
+
+// Server control
+async function startServer() {
+  if (!currentServer) { fakeAlert('Select a server first'); return; }
+  if (!backendConnected) { fakeAlert(`Backend not connected to ${BACKEND_URL}`); return; }
+  const res = await apiCall('/api/start', {
+    version: currentServer.version,
+    type: currentServer.type,
+    ram: currentServer.ram.replace(' GB','')
+  });
+  if (res.success) {
+    serverRunning = true;
+    _uptimeStart = Date.now();
+    fakeAlert('✅ Server started!');
+  } else {
+    fakeAlert('❌ Failed: ' + res.error);
+  }
+  render();
+}
+async function stopServer() {
+  await apiCall('/api/stop');
+  serverRunning = false;
+  fakeAlert('⏹️ Server stopped');
+  render();
+}
+async function sendCommand() {
+  const inp = document.getElementById('cmd-input');
+  if (!inp?.value) return;
+  const cmd = inp.value;
+  inp.value = '';
+  await apiCall('/api/command', { cmd });
+}
+
+// User management
+function saveNewUser() {
+  const u = document.getElementById('nu-user')?.value;
+  const p = document.getElementById('nu-pass')?.value;
+  const r = document.getElementById('nu-role')?.value || 'user';
+  if (!u || !p) { fakeAlert('Username and password required'); return; }
+  if (users.find(x => x.username === u)) { fakeAlert('Username exists'); return; }
+  users.push({id: Date.now().toString(), username: u, password: p, role: r});
+  save();
+  closeModal();
+  fakeAlert(`✅ User ${u} added`);
+}
+function removeUser(id) {
+  if (currentUser?.id === id) { fakeAlert('Cannot remove yourself'); return; }
+  users = users.filter(u => u.id !== id);
+  save();
+  render();
+}
+function changeRole(id, role) {
+  const u = users.find(x => x.id === id);
+  if (u) u.role = role;
+  save();
+  render();
+}
+
+// Modal
+function openModal(name) { modal = name; render(); }
+function closeModal() { modal = null; render(); }
+
+// Render functions
+function render() {
+  const screen = document.getElementById('screen');
+  const nav = document.getElementById('bottom-nav');
+  if (!screen) return;
+  
+  if (!currentUser) {
+    nav.style.display = 'none';
+    screen.innerHTML = renderLogin();
+    return;
+  }
+  
+  nav.style.display = 'flex';
+  nav.innerHTML = `
+    <button class="nav-btn ${currentTab === 'home' ? 'active' : ''}" onclick="currentTab='home';render()">🏠 HOME</button>
+    <button class="nav-btn ${currentTab === 'servers' ? 'active' : ''}" onclick="currentTab='servers';render()">🌐 SERVERS</button>
+    <button class="nav-btn ${currentTab === 'mods' ? 'active' : ''}" onclick="currentTab='mods';render()">🧩 MODS</button>
+    <button class="nav-btn ${currentTab === 'console' ? 'active' : ''}" onclick="currentTab='console';render()">🖥️ CONSOLE</button>
+    <button class="nav-btn ${currentTab === 'users' ? 'active' : ''}" onclick="currentTab='users';render()">👥 USERS</button>
+  `;
+  
+  let content = '';
+  if (currentTab === 'home') content = renderHome();
+  else if (currentTab === 'servers') content = renderServers();
+  else if (currentTab === 'mods') content = renderMods();
+  else if (currentTab === 'console') content = renderConsole();
+  else if (currentTab === 'users') content = renderUsers();
+  
+  screen.innerHTML = `<div>${content}</div>${modal ? renderModal() : ''}`;
+  
+  if (currentTab === 'console') {
+    setTimeout(() => {
+      const box = document.getElementById('console-box');
+      if (box) renderConsoleSection();
+    }, 50);
+  }
+}
+
+function renderLogin() {
+  return `
+    <div class="card tc" style="margin-top:40px;">
+      <div style="font-size:48px;">⛏️</div>
+      <h2 style="color:#4ade80;">MCPHONE</h2>
+      <div style="font-size:10px;color:#4a6a4a;margin-bottom:20px;">LOCAL NETWORK</div>
+      <input id="login-user" class="inp" placeholder="Username" value="Truth_finder">
+      <input id="login-pass" class="inp" type="password" placeholder="Password" value="hammam2009">
+      <button class="btn btn-primary" style="width:100%;" onclick="login()">▶ LOGIN</button>
+      <div class="mt8 tc" style="font-size:9px;color:#4a6a4a;">Demo: Truth_finder / hammam2009</div>
+      <div class="mt8 tc" style="font-size:9px;color:#4a6a4a;">Backend: ${BACKEND_URL}</div>
+    </div>
+    ${modal ? renderModal() : ''}
+  `;
+}
+
+function renderHome() {
+  const connClass = backendConnected ? 'conn-on' : 'conn-off';
+  const connText = backendConnected ? (serverRunning ? '🟢 SERVER ONLINE' : '🟡 BACKEND READY') : '🔴 BACKEND OFFLINE';
+  const role = ROLES[currentUser?.role] || ROLES.user;
+  
+  return `
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;">
+        <div><span style="color:#4ade80;">👤 ${esc(currentUser?.username)}</span><br><span class="rbadge ${role.cls}">${role.name}</span></div>
+        <div class="conn-badge ${connClass}">${connText}</div>
+      </div>
+      <div class="flex mt8"><button class="btn btn-danger btn-sm" onclick="logout()">🚪 LOGOUT</button></div>
+    </div>
+    ${currentServer ? `
+      <div class="card">
+        <div class="flex" style="justify-content:space-between;">
+          <div><strong style="color:#4ade80;">${esc(currentServer.name)}</strong><br><span style="font-size:9px;">${currentServer.version} • ${currentServer.ram} • ${currentServer.type}</span></div>
+          <div class="invite-code-text">🔑 ${currentServer.inviteCode}</div>
+        </div>
+        <div class="succ-box tc mt8">
+          <div style="font-size:10px;">🎮 CONNECT WITH MINECRAFT</div>
+          <div style="font-family:Orbitron;font-size:14px;color:#fbbf24;">${MINECRAFT_ADDRESS}</div>
+          <button class="btn btn-sm" style="margin-top:5px;" onclick="navigator.clipboard?.writeText('${MINECRAFT_ADDRESS}');fakeAlert('Copied!')">📋 COPY</button>
+        </div>
+        <div class="mt8">
+          ${!serverRunning ? 
+            `<button class="btn btn-primary" style="width:100%;" onclick="startServer()">🚀 START SERVER</button>` :
+            `<button class="btn btn-danger" style="width:100%;" onclick="stopServer()">⏹️ STOP SERVER</button>`
+          }
+        </div>
+      </div>
+    ` : `
+      <div class="card tc">
+        <div style="font-size:32px;">🌐</div>
+        <button class="btn btn-primary" style="width:100%;margin-bottom:8px;" onclick="openModal('create')">➕ CREATE SERVER</button>
+        <button class="btn" style="width:100%;" onclick="openModal('join')">🔑 JOIN SERVER</button>
+      </div>
+    `}
+    <div class="warn-box">
+      <div style="color:#fbbf24;">📡 LOCAL NETWORK SETUP</div>
+      <div style="font-size:9px;margin-top:5px;">
+        1. Run backend: <code>node server.js</code><br>
+        2. Other devices: Use IP ${BACKEND_URL.replace('http://','').replace(':8080','')}<br>
+        3. Connect to Minecraft: <strong>${MINECRAFT_ADDRESS}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function renderServers() {
+  const myServers = servers.filter(s => s.ownerId === currentUser.id);
+  const joined = servers.filter(s => s.members?.includes(currentUser.id) && s.ownerId !== currentUser.id);
+  
+  return `
+    <div class="flex mb8">
+      <button class="btn flex-1" onclick="openModal('create')">➕ CREATE</button>
+      <button class="btn flex-1" onclick="openModal('join')">🔑 JOIN</button>
+    </div>
+    ${myServers.length ? `<div style="font-size:9px;color:#4a6a4a;margin:8px 0;">👑 YOUR SERVERS</div>` : ''}
+    ${myServers.map(s => `
+      <div class="server-item ${currentServer?.id === s.id ? 'sel' : ''}" onclick="selectServer('${s.id}')">
+        <div class="flex" style="justify-content:space-between;">
+          <div><strong>${esc(s.name)}</strong><br><span style="font-size:9px;">${s.version} • ${s.ram}</span></div>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteServer('${s.id}')">🗑</button>
+        </div>
+      </div>
+    `).join('')}
+    ${joined.length ? `<div style="font-size:9px;color:#4a6a4a;margin:8px 0;">🔗 JOINED</div>` : ''}
+    ${joined.map(s => `
+      <div class="server-item ${currentServer?.id === s.id ? 'sel' : ''}" onclick="selectServer('${s.id}')">
+        <strong>${esc(s.name)}</strong><br><span style="font-size:9px;">Owner: ${esc(s.ownerName)}</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderMods() {
+  const enabledCount = mods.filter(m => m.enabled).length;
+  return `
+    <div class="flex mb8">
+      <button class="btn flex-1" onclick="openModal('curseforge')">🔥 CurseForge</button>
+      <button class="btn flex-1" onclick="openModal('modrinth')">📚 Modrinth</button>
+    </div>
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;">
+        <span>📦 MODS (${enabledCount}/${mods.length})</span>
+        ${mods.length ? `<button class="btn btn-danger btn-sm" onclick="mods=[];save();render()">CLEAR</button>` : ''}
+      </div>
+      ${mods.length === 0 ? `<div class="tc" style="padding:20px;color:#4a6a4a;">No mods added</div>` : 
+        mods.map(m => `
+          <div class="mod-item">
+            <span>🧩</span>
+            <div style="flex:1;"><strong>${esc(m.name)}</strong><br><span style="font-size:9px;color:#4a6a4a;">${m.source} • ${m.cat}</span></div>
+            <label style="position:relative;width:40px;height:20px;">
+              <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="toggleMod('${m.id}')" style="opacity:0;width:0;">
+              <div style="position:absolute;inset:0;background:#1a2a1a;border-radius:20px;cursor:pointer;"></div>
+              <div style="position:absolute;top:2px;left:${m.enabled ? '22px' : '2px'};width:16px;height:16px;background:#4ade80;border-radius:50%;transition:0.2s;"></div>
+            </label>
+            <button class="btn btn-danger btn-sm" onclick="removeMod('${m.id}')">✕</button>
+          </div>
+        `).join('')
+      }
+    </div>
+  `;
+}
+
+function renderConsole() {
+  if (!serverRunning) {
+    return `<div class="card tc" style="padding:48px;"><div style="font-size:48px;">⬛</div><div>SERVER OFFLINE</div><div style="font-size:10px;color:#4a6a4a;">Go to HOME to start</div></div>`;
+  }
+  return `
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;">
+        <span>🖥️ CONSOLE</span>
+        <span style="color:#4ade80;">● ONLINE</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-label">PLAYERS</div><div class="stat-value">${onlinePlayers.length}/20</div></div>
+        <div class="stat-box"><div class="stat-label">UPTIME</div><div class="stat-value" id="uptime">00:00:00</div></div>
+        <div class="stat-box"><div class="stat-label">ADDRESS</div><div class="stat-value" style="font-size:10px;">${MINECRAFT_ADDRESS}</div></div>
+      </div>
+      <div class="console-box" id="console-box" style="height:180px;">${serverLogs.slice(-30).map(l => `<div class="cline"><span class="ctime">${l.t}</span><span>${esc(l.text)}</span></div>`).join('')}</div>
+      <div class="flex mt8">
+        <input id="cmd-input" class="inp flex-1" placeholder="/help, /list, /stop" onkeypress="if(event.key==='Enter')sendCommand()">
+        <button class="btn" onclick="sendCommand()">SEND</button>
+      </div>
+    </div>
+    <div class="card">
+      <div>👥 PLAYERS ONLINE (${onlinePlayers.length})</div>
+      <div id="player-list" class="mt8">${onlinePlayers.map(p => `<div class="player-item"><span>⛏️ ${esc(p.name)}</span><span style="color:#4ade80;">●</span></div>`).join('') || '<div style="color:#4a6a4a;">No players</div>'}</div>
+    </div>
+  `;
+}
+
+function renderUsers() {
+  const canManage = currentUser?.role === 'owner' || currentUser?.role === 'admin';
+  return `
+    ${canManage ? `<button class="btn btn-primary mb8" onclick="openModal('adduser')">+ ADD USER</button>` : ''}
+    <div class="card">
+      <div>👥 USERS (${users.length})</div>
+      ${users.map(u => {
+        const r = ROLES[u.role] || ROLES.user;
+        const isSelf = u.id === currentUser?.id;
+        return `<div class="user-item">
+          <div><strong>${esc(u.username)}</strong> <span class="rbadge ${r.cls}">${r.name}</span> ${isSelf ? '<span style="font-size:8px;">(you)</span>' : ''}</div>
+          ${canManage && !isSelf ? `
+            <div class="flex">
+              <select class="inp" style="width:80px;margin:0;padding:5px;" onchange="changeRole('${u.id}',this.value)">
+                <option value="user" ${u.role==='user'?'selected':''}>User</option>
+                <option value="mod" ${u.role==='mod'?'selected':''}>Mod</option>
+                <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                ${currentUser?.role === 'owner' ? `<option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>` : ''}
+              </select>
+              <button class="btn btn-danger btn-sm" onclick="removeUser('${u.id}')">✕</button>
+            </div>
+          ` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderModal() {
+  if (modal === 'create') {
+    return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box">
+      <h3 style="color:#4ade80;">➕ CREATE SERVER</h3>
+      <select id="modal-version" class="inp mt8">${VERSIONS.map(v => `<option ${selectedVersion===v?'selected':''}>${v}</option>`).join('')}</select>
+      <select id="modal-ram" class="inp mt8">${RAM_OPTIONS.map(r => `<option ${selectedRam===r?'selected':''}>${r}</option>`).join('')}</select>
+      <select id="modal-type" class="inp mt8">${SERVER_TYPES.map(t => `<option ${selectedType===t.id?'selected':''}>${t.label}</option>`).join('')}</select>
+      <div class="flex mt8"><button class="btn btn-primary flex-1" onclick="selectedVersion=document.getElementById('modal-version').value;selectedRam=document.getElementById('modal-ram').value;selectedType=document.getElementById('modal-type').value;createServer()">CREATE</button><button class="btn flex-1" onclick="closeModal()">CANCEL</button></div>
+    </div></div>`;
+  }
+  if (modal === 'join') {
+    return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box">
+      <h3 style="color:#4ade80;">🔑 JOIN SERVER</h3>
+      <input id="join-code" class="inp" placeholder="Invite code" style="text-align:center;text-transform:uppercase;">
+      <div class="flex mt8"><button class="btn btn-primary flex-1" onclick="joinServer()">JOIN</button><button class="btn flex-1" onclick="closeModal()">CANCEL</button></div>
+    </div></div>`;
+  }
+  if (modal === 'adduser') {
+    return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box">
+      <h3 style="color:#4ade80;">➕ ADD USER</h3>
+      <input id="nu-user" class="inp" placeholder="Username">
+      <input id="nu-pass" class="inp" type="password" placeholder="Password">
+      <select id="nu-role" class="inp"><option value="user">User</option><option value="mod">Mod</option><option value="admin">Admin</option></select>
+      <div class="flex mt8"><button class="btn btn-primary flex-1" onclick="saveNewUser()">ADD</button><button class="btn flex-1" onclick="closeModal()">CANCEL</button></div>
+    </div></div>`;
+  }
+  if (modal === 'curseforge') {
+    return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box">
+      <h3 style="color:#4ade80;">🔥 CURSEFORGE</h3>
+      ${CURSEFORGE_MODS.map(m => `<div class="mod-item" style="cursor:pointer;" onclick="addModFromCF(${JSON.stringify(m).replace(/"/g,'&quot;')})"><div style="flex:1;"><strong>${m.name}</strong><div style="font-size:9px;">${m.desc}</div></div><span>➕</span></div>`).join('')}
+      <button class="btn btn-secondary btn-full mt8" onclick="closeModal()">CLOSE</button>
+    </div></div>`;
+  }
+  if (modal === 'modrinth') {
+    return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box">
+      <h3 style="color:#4ade80;">📚 MODRINTH</h3>
+      ${MODRINTH_MODS.map(m => `<div class="mod-item" style="cursor:pointer;" onclick="addModFromMR(${JSON.stringify(m).replace(/"/g,'&quot;')})"><div style="flex:1;"><strong>${m.name}</strong><div style="font-size:9px;">${m.desc}</div></div><span>➕</span></div>`).join('')}
+      <button class="btn btn-secondary btn-full mt8" onclick="closeModal()">CLOSE</button>
+    </div></div>`;
+  }
+  return '';
+}
+
+function renderConsoleSection() {
+  const box = document.getElementById('console-box');
+  if (box) {
+    box.innerHTML = serverLogs.slice(-50).map(l => `<div class="cline"><span class="ctime">${l.t}</span><span>${esc(l.text)}</span></div>`).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+  const playerList = document.getElementById('player-list');
+  if (playerList) {
+    playerList.innerHTML = onlinePlayers.map(p => `<div class="player-item"><span>⛏️ ${esc(p.name)}</span><span style="color:#4ade80;">●</span></div>`).join('') || '<div style="color:#4a6a4a;">No players</div>';
+  }
+}
+
+// Clock and uptime
+setInterval(() => {
+  document.getElementById('clock') && (document.getElementById('clock').innerText = new Date().toLocaleTimeString());
+  if (_uptimeStart && serverRunning) {
+    const uptime = Math.floor((Date.now() - _uptimeStart) / 1000);
+    const uptimeEl = document.getElementById('uptime');
+    if (uptimeEl) uptimeEl.innerText = `${String(Math.floor(uptime/3600)).padStart(2,'0')}:${String(Math.floor((uptime%3600)/60)).padStart(2,'0')}:${String(uptime%60).padStart(2,'0')}`;
+  }
+}, 1000);
+
+// Expose functions globally
+window.login = login;
+window.logout = logout;
+window.startServer = startServer;
+window.stopServer = stopServer;
+window.sendCommand = sendCommand;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.createServer = createServer;
+window.joinServer = joinServer;
+window.selectServer = selectServer;
+window.deleteServer = deleteServer;
+window.addModFromCF = addModFromCF;
+window.addModFromMR = addModFromMR;
+window.toggleMod = toggleMod;
+window.removeMod = removeMod;
+window.saveNewUser = saveNewUser;
+window.removeUser = removeUser;
+window.changeRole = changeRole;
+window.currentTab = 'home';
+
+// Bootstrap
+load();
+checkBackend();
+setInterval(checkBackend, 10000);
+render();
+</script>
+</body>
+</html>
